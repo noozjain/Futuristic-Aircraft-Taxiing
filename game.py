@@ -1,28 +1,21 @@
 import pygame
+import numpy as np
 
-
+mid = []
 pygame.init()
-
-x = 262
-y = 182
-change_x = 0.5
+pygame.display.set_caption("  KIAL (VOBL) Map")
+window_icon = pygame.image.load("C:/Users/jainh/OneDrive/Desktop/Capstone/Implementation/Pygame Code/Window icon.png")
+pygame.display.set_icon(window_icon)
 
 screen = pygame.display.set_mode((1200,628))
 img = pygame.image.load("C:/Users/jainh/OneDrive/Desktop/Capstone/Implementation/Final data/final_layout.png")
-
+wide_body_img = pygame.image.load("C:/Users/jainh/Downloads/wide_body.png")
 font = pygame.font.Font('freesansbold.ttf', 8)
 
-#for loop to define the edge
-# USe a for loop to define the entire edge rather than using 4 poiints!
-#How are you going to define the y locaiton??
-# A10_edge = [i for i in range(80,101)]
-# print(len(A10_edge))
-# print(A10_edge)
-# A10 = [(80,90), (100,90),(80,77), (100,77)]
-# A9 = [(223,90),(247,90),(223,77),(247,77)]
-# x = [A10,A9]
-# print(x)
-
+x = 640 
+y = 518
+speed_x = 0.1
+speed_y = 0.1
 
 taxiway_nodes_1 = {'P_1': ((1011,142),(1046,173),(1063,166),(1024,124)), 'P_2': ((1047,173),(1047,511),(1063,511),(1063,166)),
                    
@@ -34,30 +27,30 @@ taxiway_nodes_1 = {'P_1': ((1011,142),(1046,173),(1063,166),(1024,124)), 'P_2': 
 
                  'N1':((993,215),(984,215),(984,308),(993,308)), 'M1': ((963,215),(978,215),(978,375),(963,375)),
 
-                 'D2':((993,215),(1046,216),(1046,203),(993,203)), 'N2': ((998,203),(982,203),(982,142),(998,142)),
+                 'D2':((993,215),(1046,215),(1046,203),(993,203)), 'N2': ((998,203),(982,203),(982,142),(998,142)),
 
-                 'M2': ((977,203),(963,203),(963,142),(977,142)), 'C2': ((963,182),(963,196),(897,196),(897,183)),
+                 'M2': ((977,203),(963,203),(963,142),(977,142)), 'C2': ((963,182),(963,196),(897,196),(897,182)),
 
-                 'B1_1': ((898,142),(878,142),(878,201),(898,201)), 'D1_1': ((963,215),(877,213),(877,201),(963,203)),
+                 'B1_1': ((898,142),(878,142),(878,201),(898,201)), 'D1_1': ((963,215),(877,215),(877,203),(963,203)),
 
-                 'D1_2': ((877,213),(878,194),(800,195),(800,213)), 'B': ((1011,142),(1024,124),(772,124),(772,142)),
+                 'D1_2': ((877,213),(877,194),(800,194),(800,213)), 'B': ((1011,142),(1024,124),(772,124),(772,142)),
 
                  'H': ((180,526),(1100,526),(1100,511), (180,511)), 'B6': ((79,107),(93,107),(93,195), (79,195)),
                 
-                'K': ((249,107), (284,107),(273,127),(273,164) ,(258,164), (258,127)), 'B4': ((517,107), (555,107),(545,118), (542,173),(526,173), (527,118)),
+                'K': ((249,107), (284,107),(273,127),(273,164) ,(258,164), (258,127)), 'B4': ((517,107), (555,107),(545,118), (542,173),(527,173), (527,118)),
 
 
                 'B2': ((746,107),(771,107),(771,138), (765,149),(765,173), (753,173),(753,149), (746,138)),
 
                 'A': ((79,90), (1029,90) ,(1008,107), (79,107)), 'L_small': ((258,164),(273,164),(273,173), (258,173)),
 
-                'L': ((258,173),(800,173),(800,195),(258,195)),
+                'L': ((258,173),(258,195),(800,195),(800,173)),
                 
-                'N_runway': ((80,40),(1022,40), (1022,56),(80,56)), 'S_runway':((180,573),(1120,573),(1120,560),(180,560)),
+                'N_runway': ((80,40),(80,56), (1022,56),(1022,40)), 'S_runway':((180,573),(180,560),(1120,560),(1120,573)),
                 
-                'M3': ((962,107),(983,107),(983,124),(962,124)), 'B1_2': ((874,107),(904,107),(904,124),(874,124)),
+                'M3': ((962,107),(962,124),(983,124),(983,107)), 'B1_2': ((874,107),(874,124),(904,124),(904,107)),
 
-                'G4': ((646,511), (672,511),(672,491),(646,491)), 'G': ((672,491), (672,504), (1047,504),(1047,491)),
+                'G4': ((646,511),(646,491),(672,491), (672,511)), 'G': ((672,491), (672,504), (1047,504),(1047,491)),
 
                 'G1': ((1120,526), (1120,491), (1100,491), (1100,526)), 'C1': ((878,173), (878,194), (800,194), (800,173))
 
@@ -83,7 +76,7 @@ taxiway_nodes_2 = {'A11': ((80,90), (100,90), (100,77),(80,77)), 'A10':((223,90)
                  
                  'H2': ((1084, 526),(1100,526),(1100,547),(1084, 547)), 'H1': ((1104,526),(1120,526),(1120,549),(1104,549)), }
 
-
+#Function to plot the parking spots
 def parking_spots():
      for i in range(275,755,10):
           pygame.draw.circle(
@@ -92,43 +85,85 @@ def parking_spots():
                (i,170),
                2,
           )
-def drawline():
+#Function to plot the taxiway polygons         
+def drawpoly():
     count = 0
     for i in taxiway_nodes_1.values():
-            # pos1 = i[0]
-            # pos2 = i[1]
             pygame.draw.polygon(screen,(0,255,0),i, width = 1)
-            # text = font.render((taxiway_nodes_1.values()).index(i), True, (0,255,233))
-            # print('line drawn')
             count +=1
             if count == len(taxiway_nodes_1.values()):
                 break
             else:
                 continue
-
+#Function to plot the taxiway polygons attached to runway for a different color
 def drawline_runway_taxiway():
     count = 0
     for i in taxiway_nodes_2.values():
-            # pos1 = i[0]
-            # pos2 = i[1]
             pygame.draw.polygon(screen,(255,0,0),i, width = 1)
-            # print('line drawn')
             count +=1
             if count == len(taxiway_nodes_1.values()):
                 break
             else:
                 continue
-    # for i in taxiway_nodes_to_runway.values():
-    #         pos1 = i[0]
-    #         pos2 = i[1]
-    #         pygame.draw.aaline(screen,(0,255,0),pos1,pos2)
-    #         # print('line drawn')
-    #         count +=1
-    #         if count == len(taxiway_nodes_to_runway.values()):
-    #             break
-    #         else:
-    #             continue
 
+# def middle_line():
+#     x_min = 10000
+#     x_max = 0
+#     y_min = 10000
+#     y_max = 0
+#     for i in taxiway_nodes_1['D2']:
+#         if i[0]<x_min:
+#             x_min = i[0]
+#         if i[0] > x_max:
+#             x_max = i[0]
+#         if i[1]<y_min:
+#             y_min = i[1]
+#         if i[1] > y_max:
+#             y_max = i[1]
+    
+#     mid = {'D2_middle': (((x_min+x_max)//2), ((y_min+y_max)//2))}
+#     return mid
+
+def middle_line():
+    for i in taxiway_nodes_1.values():
+        x_min = 10000
+        x_max = 0
+        y_min = 10000
+        y_max = 0
+        for j in i:
+            if j[0]<x_min:
+                x_min = j[0]
+            if j[0] > x_max:
+                x_max = j[0]
+            if j[1]<y_min:
+                y_min = j[1]
+            if j[1] > y_max:
+                y_max = j[1]
+
+        mid.append((x_min,((x_min+x_max)//2), x_max, y_min, ((y_min+y_max)//2),y_max))
+    return mid
+
+# def middle_line(x):
+#     x_min = 10000
+#     x_max = 0
+#     y_min = 10000
+#     y_max = 0
+#     for j in x:
+#         # for j in i:
+#         if j[0]<x_min:
+#             x_min = j[0]
+#         if j[0] > x_max:
+#             x_max = j[0]
+#         if j[1]<y_min:
+#             y_min = j[1]
+#         if j[1] > y_max:
+#             y_max = j[1]
+
+#     mid.append((((x_min+x_max)//2), ((y_min+y_max)//2)))
+#     print("DONE")
+#     return mid
+      
+#Function to find the minimum and maximum x and y coordinate for each taxiway
 def max_min():
     # List to store the results
     min_max_list = []
@@ -213,13 +248,25 @@ def identify_location(point):
     
     return "Outside all regions"
 
-# def sample_moving(x,y):
-#     pygame.draw.circle(
-#         screen,
-#         (255,0,0),
-#         (x,y),
-#         4,
-#     )
+# def test_point():
+#     count = 0
+#     if count<1:
+#         test_plane = pygame.draw.circle(screen, (255,0,0), (np.random.randint(0,1260), np.random.randint(0,628)), 4)
+#         count+=1
+
+# def trial_movement():
+#     x = 600
+#     y = 450
+#     speed = 3
+
+#     if x>0:
+#         # change_x+=1
+#         x-=speed
+#     if x<4:
+#         # change_x = -1
+#         x+=speed
+#     pygame.draw.circle(screen, (255,0,0), (x,y),4)
+
 
 running = True 
 
@@ -233,17 +280,7 @@ while running:
             print(location)
 
     # screen.blit(pygame.transform.scale(img, (1200,628)), (0,0))
-
-    if x>=795:
-        change_x = -0.5
-        x += change_x
-    if x<= 262:
-        change_x = 0.5
-        x += change_x
-    x +=change_x
-
-    # sample_moving(x,y)
-
+    screen.fill((0,0,0))
     for i in taxiway_nodes_1.keys():
         pygame.draw.circle (
             screen, 
@@ -251,21 +288,47 @@ while running:
             taxiway_nodes_1[i][0],
             2,
         )
-        text = font.render(i, True, (0,255,233))
+    middle_line()
+    
+    # for i in mid:
+        
+    #     pygame.draw.line(
+    #         screen, (255,0,0),
+    #         (i[1],i[3]) , (i[1],i[5]),1,
+    #     )
 
-        screen.blit(text, taxiway_nodes_1[i][0])
-    drawline()
+    for i in mid:
+        if i[2]-i[0] > i[5]-i[3]:
+            pygame.draw.line(
+                screen, (0,0,255),
+                (i[0],i[4]) , (i[2],i[4]),2,
+            )
+        else:
+            pygame.draw.line(
+            screen, (255,0,0),
+            (i[1],i[3]) , (i[1],i[5]),2,
+        )
+
+        # text = font.render(i, True, (0,255,233))
+
+        # screen.blit(text, taxiway_nodes_1[i][0])
+    
+    # test_plane = pygame.draw.circle(screen, (255,0,0), (600,450), 4)
+    # print(identify_location((600,450)))
+    # trial_movement()
+
+    if x>1100:
+        # change_x+=1
+        x-=speed_x
+
+    if x<84:
+        # change_x = -1
+        x+=speed_x
+    x+=speed_x
+    pygame.draw.circle(screen, (255,0,0), (x,y),4)
+    drawpoly()
     drawline_runway_taxiway()
     max_min()
     parking_spots()
-        # if event.type == pygame.MOUSEBUTTONDOWN:
-            
-        #     pos = event.pos
-        #     print(pos)
-        # if event.type == pygame.MOUSEBUTTONUP:
-        #     pos = None
-        # print(pygame.mouse.get_pos())
-
-
-
+    # test_point()
     pygame.display.update()
