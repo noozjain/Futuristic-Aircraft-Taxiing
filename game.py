@@ -1,7 +1,11 @@
 import pygame
 import numpy as np
+import random 
 
 mid = []
+a = {}
+planes_created = True
+planes_list = []
 pygame.init()
 pygame.display.set_caption("  KIAL (VOBL) Map")
 window_icon = pygame.image.load("C:/Users/jainh/OneDrive/Desktop/Capstone/Implementation/Pygame Code/Window icon.png")
@@ -77,14 +81,15 @@ taxiway_nodes_2 = {'A11': ((80,90), (100,90), (100,77),(80,77)), 'A10':((223,90)
                  'H2': ((1084, 526),(1100,526),(1100,547),(1084, 547)), 'H1': ((1104,526),(1120,526),(1120,549),(1104,549)), }
 
 #Function to plot the parking spots
-def parking_spots():
-     for i in range(275,755,10):
-          pygame.draw.circle(
-               screen,
-               (0,0,255),
-               (i,170),
-               2,
-          )
+# def parking_spots():
+#      for i in range(275,755,10):
+#           pygame.draw.circle(
+#                screen,
+#                (0,0,255),
+#                (i,170),
+#                2,
+#           )
+
 #Function to plot the taxiway polygons         
 def drawpoly():
     count = 0
@@ -95,6 +100,7 @@ def drawpoly():
                 break
             else:
                 continue
+
 #Function to plot the taxiway polygons attached to runway for a different color
 def drawline_runway_taxiway():
     count = 0
@@ -106,24 +112,7 @@ def drawline_runway_taxiway():
             else:
                 continue
 
-# def middle_line():
-#     x_min = 10000
-#     x_max = 0
-#     y_min = 10000
-#     y_max = 0
-#     for i in taxiway_nodes_1['D2']:
-#         if i[0]<x_min:
-#             x_min = i[0]
-#         if i[0] > x_max:
-#             x_max = i[0]
-#         if i[1]<y_min:
-#             y_min = i[1]
-#         if i[1] > y_max:
-#             y_max = i[1]
-    
-#     mid = {'D2_middle': (((x_min+x_max)//2), ((y_min+y_max)//2))}
-#     return mid
-
+#Function to plot the midline of each polygon
 def middle_line():
     for i in taxiway_nodes_1.values():
         x_min = 10000
@@ -141,27 +130,12 @@ def middle_line():
                 y_max = j[1]
 
         mid.append((x_min,((x_min+x_max)//2), x_max, y_min, ((y_min+y_max)//2),y_max))
-    return mid
-
-# def middle_line(x):
-#     x_min = 10000
-#     x_max = 0
-#     y_min = 10000
-#     y_max = 0
-#     for j in x:
-#         # for j in i:
-#         if j[0]<x_min:
-#             x_min = j[0]
-#         if j[0] > x_max:
-#             x_max = j[0]
-#         if j[1]<y_min:
-#             y_min = j[1]
-#         if j[1] > y_max:
-#             y_max = j[1]
-
-#     mid.append((((x_min+x_max)//2), ((y_min+y_max)//2)))
-#     print("DONE")
-#     return mid
+    count = 0
+    for i in taxiway_nodes_1.keys():
+        a.update({i:mid[count]})
+        count +=1
+        
+    return mid,a
       
 #Function to find the minimum and maximum x and y coordinate for each taxiway
 def max_min():
@@ -239,33 +213,66 @@ def identify_location(point):
     # Check if the point is inside any polygon
     for name, polygon in taxiway_nodes_1.items():
         if is_point_in_polygon(point, polygon):
-            return f"Inside {name}"
+            print(f"Inside {name}") 
+            return point
     
     # Check if the point is on the edge of any polygon
     for name, polygon in taxiway_nodes_1.items():
         if is_point_on_edge(point, polygon):
-            return f"On the edge of {name}"
+            print(f"On the edge of {name}")
+            return point,name
     
     return "Outside all regions"
 
-# def test_point():
-#     count = 0
-#     if count<1:
-#         test_plane = pygame.draw.circle(screen, (255,0,0), (np.random.randint(0,1260), np.random.randint(0,628)), 4)
-#         count+=1
+#Function to update the location of plane on taxiway and get them to move
+def update_plane_location(parking_gate):
+    pygame.draw.circle(screen,(255,0,0), parking_gate, 4)
 
-# def trial_movement():
-#     x = 600
-#     y = 450
-#     speed = 3
+    identify_location(parking_gate)
+    
 
-#     if x>0:
-#         # change_x+=1
-#         x-=speed
-#     if x<4:
-#         # change_x = -1
-#         x+=speed
-#     pygame.draw.circle(screen, (255,0,0), (x,y),4)
+    # x_location= identify_location(parking_gate)[0]
+    # y_location = identify_location(parking_gate)[1]
+
+
+    # print(x_location, y_location)
+
+#Function to determine a collision
+def collision():
+    pass
+
+#Function to initialise number of planes (try to randomise across dep and arr)
+def create_planes(n):
+    for i in range(0,n):
+        x = random.randint(275,755)
+        y = 170
+        pygame.draw.circle(screen, (255,67,0), (x, y),2)
+        print(f"Drew circle at ({x}, {y})")
+        planes_list.append((x,y))
+    return planes_list
+
+
+#Fuction to end planes journey once it reaches gate
+def start_end():
+    pass
+
+#Function to move plane from initial gate to taxiway cntreline
+def move_from_gate(gate):
+    middle_line()
+    speed = 0.5
+    y_mid = a['L'][4]
+    for i in gate:
+        x = i[0]
+        y = i[1]
+        while y!=y_mid:
+            if y<y_mid:
+                y+=speed
+                pygame.draw.circle(screen, (255,0,0), (x,y),4)
+            if y>y_mid:
+                y-=speed
+                pygame.draw.circle(screen, (255,0,0), (x,y),4)
+            # y+=speed
+    return y
 
 
 running = True 
@@ -277,25 +284,17 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
             location = identify_location(mouse_pos)
+            # update_plane_location(location)           
             print(location)
 
-    # screen.blit(pygame.transform.scale(img, (1200,628)), (0,0))
-    screen.fill((0,0,0))
-    for i in taxiway_nodes_1.keys():
-        pygame.draw.circle (
-            screen, 
-            (255,0,0),
-            taxiway_nodes_1[i][0],
-            2,
-        )
-    middle_line()
-    
-    # for i in mid:
         
-    #     pygame.draw.line(
-    #         screen, (255,0,0),
-    #         (i[1],i[3]) , (i[1],i[5]),1,
-    #     )
+    # screen.fill((0,0,0))
+    
+    # move_from_gate((366,176))
+
+    middle_line()
+    # print(a)
+    # print(mid)
 
     for i in mid:
         if i[2]-i[0] > i[5]-i[3]:
@@ -317,18 +316,25 @@ while running:
     # print(identify_location((600,450)))
     # trial_movement()
 
-    if x>1100:
-        # change_x+=1
-        x-=speed_x
 
-    if x<84:
-        # change_x = -1
-        x+=speed_x
-    x+=speed_x
-    pygame.draw.circle(screen, (255,0,0), (x,y),4)
+    # if x>1100:
+    #     # change_x+=1
+    #     x-=speed_x
+
+    # if x<84:
+    #     # change_x = -1
+    #     x+=speed_x
+    # x+=speed_x
+    # pygame.draw.circle(screen, (255,0,0), (x,y),4)
     drawpoly()
     drawline_runway_taxiway()
     max_min()
-    parking_spots()
-    # test_point()
+    # parking_spots()
+    if planes_created:
+        b = create_planes(5)
+        move_from_gate(b)
+        planes_created = False
+    # update_plane_location((1063,511))
+
+    
     pygame.display.update()
