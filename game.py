@@ -1,11 +1,19 @@
 import pygame
 import numpy as np
 import random 
+import time
 
-mid = []
+mid = [] #to store tuples of length 6 consisting of (xmin,xmid,xmax,ymin,ymid,ymax)
 a = {}
-planes_created = True
-planes_list = []
+planes_created = False #to check if planes have been initialised
+planes_list = [] #to store initial location of every plane after initialisation
+plane_start_time = []
+initial_time = time.time()
+plane_moving = []  # List to track which planes are moving
+plane_visible = []  # List to track the visibility of each plane (for blinking effect)
+blink_interval = 1  # Time interval in seconds for blinking
+last_blink_time = time.time()
+
 pygame.init()
 pygame.display.set_caption("  KIAL (VOBL) Map")
 window_icon = pygame.image.load("C:/Users/jainh/OneDrive/Desktop/Capstone/Implementation/Pygame Code/Window icon.png")
@@ -20,6 +28,23 @@ x = 640
 y = 518
 speed_x = 0.1
 speed_y = 0.1
+
+parking_bays = {'501': (333,212),'502' : (328,212),'503' : (322,212),'504' : (313,212),'505' : (303,212),'506' : (293,212),
+                '507' : (296,147),'508' : (306,147),'509' : (316,147),'510' : (327,147),'51W' : (339,147),'51' : (351,147),
+                '52W' : (361,147),'52' : (471,147),'53W' : (381,147),'53' : (394,147),'54W' : (404,147),'54' : (410,147),
+                '55' : (423,147),'56' : (445,147),'57' : (455,147),'58' : (465,147),'59' : (486,147),'60' : (490,147),
+                '61' : (497,147),'62' : (503,147),'63' : (509,147),'64' : (517,147),'65' : (520,147),'66' : (564,147),
+                '67' : (570,147),'68' : (574,147),'69' : (589,147),'70' : (594,147),'71' : (599,147),'72' : (613,147),'73' : (618,147),
+                '74' : (623,147),'75' : (637,147),'76' : (642,147),'77' : (647,147),'78' : (661,147),'79' : (666,147),'80' : (671,147),
+                '81' : (686,147),'82' : (691,147),'83' : (696,147),'84' : (709,147),'85' : (714,147),'86' : (719,147),'87' : (734,147),
+                '88' : (744,147),'89' : (754,147),'90' : (784,147),'91' : (794,147),'92' : (804,147),'93' : (814,147),'94' : (824,147),
+                '95' : (834,147),'96' : (846,147),'97' : (856,147),'98' : (866,147),'99' : (876,147),'100' : (886,147),'101' : (920,147),
+                '102' : (930,147),'103' : (940,147),'104' : (950,147),'105' : (960,147),'106' : (970,147),
+                '49' : (351,212),
+                '47' : (371,212),'45' : (391,212),'43' : (428,212),'42' : (438,212),'41' : (448,212),'40' : (458,212),
+                '39' : (468,212),'38' : (488,212),'37' : (495,212),'36' : (499,212), '35' : (509,212),'34' : (513,212),
+                '33' : (519,212),'32' : (559,212),'31' : (569,212),'30' : (577,212),'29' : (581,212),'28' : (591,212),
+                '27' : (597,212),'26' : (601,212),'25' : (611,212),'24' : (617,212),'23' : (621,212),}
 
 taxiway_nodes_1 = {'P_1': ((1011,142),(1046,173),(1063,166),(1024,124)), 'P_2': ((1047,173),(1047,511),(1063,511),(1063,166)),
                    
@@ -242,39 +267,126 @@ def collision():
     pass
 
 #Function to initialise number of planes (try to randomise across dep and arr)
-def create_planes(n):
-    for i in range(0,n):
-        x = random.randint(275,755)
-        y = 170
-        pygame.draw.circle(screen, (255,67,0), (x, y),2)
-        print(f"Drew circle at ({x}, {y})")
-        planes_list.append((x,y))
-    return planes_list
+# def create_planes(n):
+#     for i in range(0,n):
+#         x = random.randint(275,755)
+#         y = 170
+#         pygame.draw.circle(screen, (255,67,0), (x, y),2)
+#         print(f"Drew circle at ({x}, {y})")
+#         planes_list.append((x,y))
+#     return planes_list
 
+#This create plane function creates planes randomly anywhere.
+# def create_planes(n):
+#     global plane_start_time
+#     plane_moving = [False] * n  # Initially, no planes are moving
+#     plane_visible = [True] * n  # Initially, all planes are visible (for blinking)
+
+#     for i in range(0, n):
+#         x = random.randint(275, 755)
+#         y = 170
+        
+#         # Assign a random delay (between 0 and 5 seconds for example) for each plane
+#         random_delay = random.uniform(0, 5)
+#         plane_start_time.append(initial_time + random_delay)
+        
+#         pygame.draw.circle(screen, (255, 67, 0), (x, y), 4)
+#         print(f"Drew circle at ({x}, {y}), start after {random_delay} seconds")
+#         planes_list.append((x, y))
+    
+#     return planes_list
+
+#This create plane function randomly creates planes at some gates instead
+def create_planes(n):
+    # i = 0
+    # while i<n:
+    #     random_pair = random.choice(list(parking_bays.values()))
+    #     pygame.draw.circle(screen, (255, 67, 0), random_pair, 4)
+    #     print(f"Drew circle at ({random_pair})")
+    #     planes_list.append(random_pair)
+    # return random_pair
+    global plane_start_time
+    plane_moving = [False] * n  # Initially, no planes are moving
+    plane_visible = [True] * n  # Initially, all planes are visible (for blinking)
+
+    for i in range(0, n):
+        random_pair = random.choice(list(parking_bays.values()))
+        
+        # Assign a random delay (between 0 and 5 seconds for example) for each plane
+        random_delay = random.uniform(0, 3)
+        plane_start_time.append(initial_time + random_delay)
+        
+        pygame.draw.circle(screen, (255, 67, 0), random_pair, 2)
+        print(f"Drew circle at ({random_pair}), start after {random_delay} seconds, from gate {list(parking_bays.keys())
+      [list(parking_bays.values()).index(random_pair)]}")
+        planes_list.append(random_pair)
+    
+    return planes_list
 
 #Fuction to end planes journey once it reaches gate
 def start_end():
     pass
 
 #Function to move plane from initial gate to taxiway cntreline
+# def move_from_gate(gate):
+#     middle_line()
+#     speed = 0.5
+#     y_mid = a['L'][4]
+#     for i in gate:
+#         x = i[0]
+#         y = i[1]
+#         while y!=y_mid:
+#             if y<y_mid:
+#                 y+=speed
+#                 pygame.draw.circle(screen, (255,0,0), (x,y),4)
+#             if y>y_mid:
+#                 y-=speed
+#                 pygame.draw.circle(screen, (255,0,0), (x,y),4)
+#             # y+=speed
+#     return y
 def move_from_gate(gate):
-    middle_line()
+    middle_line()  # Ensure middle line is calculated
     speed = 0.5
-    y_mid = a['L'][4]
-    for i in gate:
-        x = i[0]
-        y = i[1]
-        while y!=y_mid:
-            if y<y_mid:
-                y+=speed
-                pygame.draw.circle(screen, (255,0,0), (x,y),4)
-            if y>y_mid:
-                y-=speed
-                pygame.draw.circle(screen, (255,0,0), (x,y),4)
-            # y+=speed
-    return y
+    y_mid = a['L'][4]  # Mid y-coordinate for taxiway 'L'
+    updated_gate = []  # Store updated positions
+    current_time = time.time()
+    
+    for idx, i in enumerate(gate):
+        x, y = i[0], i[1]
+        
+        # Check if the plane's start time has passed
+        if current_time >= plane_start_time[idx]:
+            
+            # Check if the plane has reached the midline
+            if abs(y - y_mid) > speed:
+                # Move the plane vertically toward the middle y-coordinate
+                if y < y_mid:
+                    y += speed
+                elif y > y_mid:
+                    y -= speed
+        
+        # Append the updated (or unchanged) position
+        updated_gate.append((x, y))
+        
+        # Draw the plane at the updated position
+        pygame.draw.circle(screen, (255, 0, 0), (x, y), 4)
+    
+    return updated_gate
 
-
+def blink_planes(gate):
+    global last_blink_time, plane_visible
+    current_time = time.time()
+    
+    # Check if it's time to toggle visibility (blink) based on the interval
+    if current_time - last_blink_time >= blink_interval:
+        # Toggle visibility for each plane
+        plane_visible = [not visible for visible in plane_visible]
+        last_blink_time = current_time  # Reset the timer
+    
+    for idx, (x, y) in enumerate(gate):
+        # Draw the plane only if it is currently visible
+        if plane_visible[idx]:
+            pygame.draw.circle(screen, (255, 0, 0), (x, y), 4)
 running = True 
 
 while running:
@@ -288,13 +400,10 @@ while running:
             print(location)
 
         
-    # screen.fill((0,0,0))
-    
-    # move_from_gate((366,176))
-
+    screen.fill((0,0,0))
+    drawpoly()
     middle_line()
-    # print(a)
-    # print(mid)
+
 
     for i in mid:
         if i[2]-i[0] > i[5]-i[3]:
@@ -312,10 +421,12 @@ while running:
 
         # screen.blit(text, taxiway_nodes_1[i][0])
     
-    # test_plane = pygame.draw.circle(screen, (255,0,0), (600,450), 4)
-    # print(identify_location((600,450)))
-    # trial_movement()
-
+    if not planes_created:
+        b = create_planes(10)
+        print(planes_list)
+        planes_created = True
+    b = move_from_gate(b)
+    # blink_planes(b)
 
     # if x>1100:
     #     # change_x+=1
@@ -326,14 +437,11 @@ while running:
     #     x+=speed_x
     # x+=speed_x
     # pygame.draw.circle(screen, (255,0,0), (x,y),4)
-    drawpoly()
+
     drawline_runway_taxiway()
     max_min()
     # parking_spots()
-    if planes_created:
-        b = create_planes(5)
-        move_from_gate(b)
-        planes_created = False
+
     # update_plane_location((1063,511))
 
     
