@@ -24,7 +24,7 @@ WHITE = (255, 255, 255)
 GRAY = (30, 30, 30)
 
 # Parse the KML file
-file_path = 'capstone-1000thattempt/resources/FINAL.kml'  # Update the file path as needed
+file_path = 'Map-final/resources/FINAL.kml'  # Update the file path as needed
 tree = ET.parse(file_path)
 root = tree.getroot()
 
